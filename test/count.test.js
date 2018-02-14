@@ -120,7 +120,7 @@ describe("Count", () => {
 
                         res.should.have.status(400);
                         res.body.should.be.a("object");
-                        res.body.should.have.property("countMessage", "Count can not be negative");
+                        res.body.should.have.property("errorMessage", "Count can not be negative");
                         
                         done();
                     })
@@ -140,7 +140,7 @@ describe("Count", () => {
                         should.not.exist(value);
 
                         res.should.have.status(400);
-                        res.body.should.have.property("countMessage", "Count have to be integer");
+                        res.body.should.have.property("errorMessage", "Count have to be integer");
                         
                         done();
                     })

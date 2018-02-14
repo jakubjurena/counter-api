@@ -33,9 +33,9 @@ module.exports = (app, redisClient) => {
                     const parsedCount = parseInt(req.body.count);
 
                     if ( !parsedCount )
-                        return callback("parseError","Count have to be integer");
+                        return callback(new TypeError("Count have to be integer"), null);
                     if ( parsedCount < 0) 
-                        return callback("rangeError","Count can not be negative");
+                        return callback(new RangeError("Count can not be negative"), null);
 
                     redisClient.incrby(COUNT_KEY, parsedCount, (err, increasedValue) => {
                         return callback(null, "Count successfully increased!");
@@ -49,7 +49,7 @@ module.exports = (app, redisClient) => {
                 const data = JSON.stringify(req.body);
                 
                 fs.appendFile("actions.json", data, (err) => {
-                    if (err) return callback("fileError", "File can not be saved");
+                    if (err) return callback(new Error("File can not be saved"), null);
                     
                     callback(null, "File has been saved");
                 })
@@ -57,13 +57,12 @@ module.exports = (app, redisClient) => {
         }, (err, results) => {
             console.log(JSON.stringify(results));
 
-            if (err) {
-                res.status(400);
-            } else {
-                res.status(200);
-            }
+            if (err)
+                return res.status(400).json({
+                    errorMessage: err.message
+                });
 
-            res.json({
+            res.status(200).json({
                 countMessage: results.increaseCount,
                 fileMessage: results.fileAppend
             })
