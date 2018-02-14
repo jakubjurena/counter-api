@@ -1,10 +1,13 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 
 const {SERVER_PORT} = require("./config");
 
 const app = express();
 const redisClient = require("./db");
 
+
+app.use(bodyParser.json());
 
 //  ROUTES
 require("./routes/counterRoutes")(app, redisClient);
