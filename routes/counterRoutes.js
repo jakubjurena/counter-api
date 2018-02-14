@@ -1,5 +1,6 @@
 
 const {COUNT_KEY} = require("../enums/dbKeys");
+const {ACTIONS_FILE} = require("../enums/fileNames");
 const async = require("async");
 const fs = require("fs");
 
@@ -48,7 +49,7 @@ module.exports = (app, redisClient) => {
             fileAppend: function(callback) {
                 const data = JSON.stringify(req.body);
                 
-                fs.appendFile("actions.json", data, (err) => {
+                fs.appendFile(ACTIONS_FILE, data, (err) => {
                     if (err) return callback(new Error("File can not be saved"), null);
                     
                     callback(null, "File has been saved");

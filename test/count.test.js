@@ -1,12 +1,15 @@
 process.env.NODE_ENV = "test";
 
 const fs = require("fs");
+const async = require("async");
+
 const chai = require("chai");
 const chaiHttp = require("chai-http");
 const {app, redisClient} = require("../index");
 const should = chai.should();
 
 const {COUNT_KEY} = require("../enums/dbKeys");
+const {ACTIONS_FILE} = require("../enums/fileNames");
 
 
 chai.use(chaiHttp);
@@ -22,12 +25,27 @@ const postData = {
 describe("Count", () => {
 
     beforeEach( (done) => {
-        redisClient.del(COUNT_KEY, (err, reply) => {
-            if (reply === 1){
-                console.log("key \"" + COUNT_KEY +"\" deleted from db")
-            } else {
-                console.log("key \"" + COUNT_KEY + "\" was not in db")
+        async.series({
+            delDB: function (callback) {
+                redisClient.del(COUNT_KEY, (err, reply) => {
+                    if (err) return callback( new Error("DB could not be cleaned"),)
+                    if (reply === 1){
+                        console.log("key \"" + COUNT_KEY +"\" deleted from db")
+                    } else {
+                        console.log("key \"" + COUNT_KEY + "\" was not in db")
+                    }
+                    callback(null,"DB was successfully cleaned");
+                })
+            },
+            delFiles: function (callback) {
+                if (!fs.exists(ACTIONS_FILE)) return callback(null, "File does not exist");
+                fs.unlink(ACTIONS_FILE, (err) => {
+                    if (err) return callback( new Error("File could not be deleted"), null);
+                    callback(null, "File was successfully deleted");
+                })
             }
+        }, (err, results) => {
+            if (err) return err;
             done();
         })
     });
