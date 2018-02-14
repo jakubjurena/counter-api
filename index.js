@@ -1,12 +1,13 @@
 const express = require("express");
 
-const config = require("./config");
+const {SERVER_PORT} = require("./config");
 
 const app = express();
+const redisClient = require("./db");
 
 
 //  ROUTES
-require("./routes/counterRoutes")(app);
+require("./routes/counterRoutes")(app, redisClient);
 
 
 //  ERROR HANDLING
@@ -16,10 +17,10 @@ app.use( (req, res) => {
   });
 
 //  START APP
-app.listen(config.PORT, err => {
+app.listen(SERVER_PORT, err => {
     if (err) {
         console.log("Error occured");
     } else {
-        console.log("Listening on port " + config.PORT);
+        console.log("Listening on port " + SERVER_PORT);
     }
 })

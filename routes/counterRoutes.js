@@ -1,5 +1,5 @@
 
-module.exports = (app) => {
+module.exports = (app, redisClient) => {
 
     app.get("/count", (req, res) => {
         //TODO save JSON body to file (using body-parser)
