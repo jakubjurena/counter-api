@@ -27,3 +27,8 @@ app.listen(SERVER_PORT, err => {
         console.log("Listening on port " + SERVER_PORT);
     }
 })
+
+module.exports = {
+    app,
+    redisClient
+}
