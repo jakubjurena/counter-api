@@ -1,0 +1,23 @@
+config:
+  target: 'http://127.0.0.1:5000'
+  phases:
+    - duration: 10
+      arrivalRate: 200
+      name: "Warm up"
+    - duration: 30
+      arrivalRate: 1000
+      name: "Max load test"
+  payload:
+    path: "MOCK_DATA.csv"
+    fields:
+      - "name"
+      - "count"
+      - "message"
+scenarios:
+  - flow:
+    - post:
+        url: "/track"
+        json:
+          name: "{{ name }}"
+          count: "{{ count }}"
+          message: "{{ message }}"
