@@ -59,7 +59,7 @@ module.exports = (app, redisClient) => {
                 fileAppend: function(callback) {
                     const data = JSON.stringify(req.body);
 
-                    fs.appendFile(ACTIONS_FILE, data, err => {
+                    fs.appendFile(ACTIONS_FILE, data, "utf8", err => {
                         if (err)
                             return callback(
                                 new Error("File can not be saved"),
