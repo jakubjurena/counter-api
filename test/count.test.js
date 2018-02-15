@@ -19,31 +19,24 @@ const postData = {
     session: "aaa111"
 };
 
-describe("Count", () => {
-    beforeEach(done => {
-        async.series(
-            {
-                delDB: function(callback) {
-                    redisClient.del(COUNT_KEY, (err, reply) => {
-                        if (err)
-                            return callback(
-                                new Error("DB could not be cleaned")
-                            );
-                        if (reply === 1) {
-                            console.log(
-                                'key "' + COUNT_KEY + '" deleted from db'
-                            );
-                        } else {
-                            console.log(
-                                'key "' + COUNT_KEY + '" was not in db'
-                            );
-                        }
-                        callback(null, "DB was successfully cleaned");
-                    });
-                },
-                delFiles: function(callback) {
-                    if (!fs.exists(ACTIONS_FILE))
-                        return callback(null, "File does not exist");
+function clean(done) {
+    async.series(
+        {
+            delDB: function(callback) {
+                redisClient.del(COUNT_KEY, (err, reply) => {
+                    if (err)
+                        return callback(new Error("DB could not be cleaned"));
+                    if (reply === 1) {
+                        console.log('key "' + COUNT_KEY + '" deleted from db');
+                    } else {
+                        console.log('key "' + COUNT_KEY + '" was not in db');
+                    }
+                    callback(null, "DB was successfully cleaned");
+                });
+            },
+            delFiles: function(callback) {
+                fs.exists(ACTIONS_FILE, exist => {
+                    if (!exist) return callback(null, "File does not exist");
                     fs.unlink(ACTIONS_FILE, err => {
                         if (err)
                             return callback(
@@ -52,13 +45,23 @@ describe("Count", () => {
                             );
                         callback(null, "File was successfully deleted");
                     });
-                }
-            },
-            (err, results) => {
-                if (err) return err;
-                done();
+                });
             }
-        );
+        },
+        (err, results) => {
+            if (err) return err;
+            done();
+        }
+    );
+}
+
+describe("Count", () => {
+    beforeEach(done => {
+        clean(done);
+    });
+
+    after(done => {
+        clean(done);
     });
 
     describe("/GET count", () => {
