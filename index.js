@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 
-const {SERVER_PORT} = require("./config");
+const { SERVER_PORT } = require("./config");
 
 const app = express();
 const redisClient = require("./db");
@@ -14,10 +14,10 @@ require("./routes/counterRoutes")(app, redisClient);
 
 
 //  ERROR HANDLING
-app.use( (req, res) => {
+app.use((req, res) => {
     res.status(500)
-    res.send({message: "Something failed!"})
-  });
+    res.send({ message: "Something failed!" })
+});
 
 //  START APP
 app.listen(SERVER_PORT, err => {

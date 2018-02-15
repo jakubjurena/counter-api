@@ -5,11 +5,11 @@ const async = require("async");
 
 const chai = require("chai");
 const chaiHttp = require("chai-http");
-const {app, redisClient} = require("../index");
+const { app, redisClient } = require("../index");
 const should = chai.should();
 
-const {COUNT_KEY} = require("../enums/dbKeys");
-const {ACTIONS_FILE} = require("../enums/fileNames");
+const { COUNT_KEY } = require("../enums/dbKeys");
+const { ACTIONS_FILE } = require("../enums/fileNames");
 
 
 chai.use(chaiHttp);
@@ -24,23 +24,23 @@ const postData = {
 
 describe("Count", () => {
 
-    beforeEach( (done) => {
+    beforeEach((done) => {
         async.series({
             delDB: function (callback) {
                 redisClient.del(COUNT_KEY, (err, reply) => {
-                    if (err) return callback( new Error("DB could not be cleaned"),)
-                    if (reply === 1){
-                        console.log("key \"" + COUNT_KEY +"\" deleted from db")
+                    if (err) return callback(new Error("DB could not be cleaned"), )
+                    if (reply === 1) {
+                        console.log("key \"" + COUNT_KEY + "\" deleted from db")
                     } else {
                         console.log("key \"" + COUNT_KEY + "\" was not in db")
                     }
-                    callback(null,"DB was successfully cleaned");
+                    callback(null, "DB was successfully cleaned");
                 })
             },
             delFiles: function (callback) {
                 if (!fs.exists(ACTIONS_FILE)) return callback(null, "File does not exist");
                 fs.unlink(ACTIONS_FILE, (err) => {
-                    if (err) return callback( new Error("File could not be deleted"), null);
+                    if (err) return callback(new Error("File could not be deleted"), null);
                     callback(null, "File was successfully deleted");
                 })
             }
@@ -50,12 +50,12 @@ describe("Count", () => {
         })
     });
 
-    describe("/GET count", () =>{
+    describe("/GET count", () => {
 
         it("it should GET count 0 (empty redis DB)", (done) => {
             chai.request(app)
                 .get("/count")
-                .end( (err, res) => {
+                .end((err, res) => {
                     res.should.have.status(200);
                     res.should.be.json;
                     res.body.should.not.have.property("error");
@@ -69,7 +69,7 @@ describe("Count", () => {
                 if (err) return done(err);
                 chai.request(app)
                     .get("/count")
-                    .end( (err, res) => {
+                    .end((err, res) => {
                         res.should.have.status(200);
                         res.should.be.json;
                         res.body.should.be.a("object");
@@ -87,7 +87,7 @@ describe("Count", () => {
             chai.request(app)
                 .post("/track")
                 .send(postData)
-                .end( (err, res) => {
+                .end((err, res) => {
                     redisClient.get(COUNT_KEY, function (err1, raisedValue) {
 
                         should.exist(raisedValue);
@@ -106,7 +106,7 @@ describe("Count", () => {
                 chai.request(app)
                     .post("/track")
                     .send(postData)
-                    .end( (err, res) => {
+                    .end((err, res) => {
                         redisClient.get(COUNT_KEY, function (err1, raisedValue) {
 
                             should.exist(raisedValue);
@@ -131,7 +131,7 @@ describe("Count", () => {
             chai.request(app)
                 .post("/track")
                 .send(invalidPostData)
-                .end( (err, res) => {
+                .end((err, res) => {
                     redisClient.get(COUNT_KEY, function (err, reply) {
 
                         should.not.exist(reply);
@@ -139,7 +139,7 @@ describe("Count", () => {
                         res.should.have.status(400);
                         res.body.should.be.a("object");
                         res.body.should.have.property("errorMessage", "Count can not be negative");
-                        
+
                         done();
                     })
                 })
@@ -152,20 +152,20 @@ describe("Count", () => {
             chai.request(app)
                 .post("/track")
                 .send(invalidPostData)
-                .end( (err, res) => {
+                .end((err, res) => {
                     redisClient.get(COUNT_KEY, function (err, value) {
 
                         should.not.exist(value);
 
                         res.should.have.status(400);
                         res.body.should.have.property("errorMessage", "Count have to be integer");
-                        
+
                         done();
                     })
                 })
         })
-        it("it should save json to file", (done) => {});
-        it("it should not save json with invalid count", (done) => {});
+        it("it should save json to file", (done) => { });
+        it("it should not save json with invalid count", (done) => { });
     })
 
 
