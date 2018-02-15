@@ -15,35 +15,23 @@ chai.use(chaiHttp);
 
 const postData = {
     count: 10,
-    message: "test data",
-    session: "aaa111"
+    message: "Lorem ipsum ...",
+    name: "post data name"
 };
 
-describe("Count", () => {
-    beforeEach(done => {
-        async.series(
-            {
-                delDB: function(callback) {
-                    redisClient.del(COUNT_KEY, (err, reply) => {
-                        if (err)
-                            return callback(
-                                new Error("DB could not be cleaned")
-                            );
-                        if (reply === 1) {
-                            console.log(
-                                'key "' + COUNT_KEY + '" deleted from db'
-                            );
-                        } else {
-                            console.log(
-                                'key "' + COUNT_KEY + '" was not in db'
-                            );
-                        }
-                        callback(null, "DB was successfully cleaned");
-                    });
-                },
-                delFiles: function(callback) {
-                    if (!fs.exists(ACTIONS_FILE))
-                        return callback(null, "File does not exist");
+function clean(done) {
+    async.series(
+        {
+            delDB: function(callback) {
+                redisClient.del(COUNT_KEY, (err, reply) => {
+                    if (err)
+                        return callback(new Error("DB could not be cleaned"));
+                    callback(null, "DB was successfully cleaned");
+                });
+            },
+            delFiles: function(callback) {
+                fs.exists(ACTIONS_FILE, exist => {
+                    if (!exist) return callback(null, "File does not exist");
                     fs.unlink(ACTIONS_FILE, err => {
                         if (err)
                             return callback(
@@ -52,13 +40,23 @@ describe("Count", () => {
                             );
                         callback(null, "File was successfully deleted");
                     });
-                }
-            },
-            (err, results) => {
-                if (err) return err;
-                done();
+                });
             }
-        );
+        },
+        (err, results) => {
+            if (err) return err;
+            done();
+        }
+    );
+}
+
+describe("Count", () => {
+    beforeEach(done => {
+        clean(done);
+    });
+
+    after(done => {
+        clean(done);
     });
 
     describe("/GET count", () => {
@@ -143,7 +141,8 @@ describe("Count", () => {
         it("it should reject POST that contains negative count", done => {
             const invalidPostData = {
                 count: -1,
-                message: "invalid count"
+                message: "Lorem ipsum ...",
+                name: "negative count"
             };
             chai
                 .request(app)
@@ -166,8 +165,9 @@ describe("Count", () => {
         });
         it('it should reject POST with no integer "count" value', done => {
             const invalidPostData = {
-                count: "text",
-                message: "invalid count"
+                count: "count",
+                message: "Lorem ipsum ...",
+                name: "post data name"
             };
             chai
                 .request(app)
@@ -187,7 +187,72 @@ describe("Count", () => {
                     });
                 });
         });
-        it("it should save json to file", done => {});
-        it("it should not save json with invalid count", done => {});
+        it("it should save json to file", done => {
+            chai
+                .request(app)
+                .post("/track")
+                .send(postData)
+                .end((err, res) => {
+                    fs.readFile(ACTIONS_FILE, "utf8", function(err, data) {
+                        should.exist(data);
+                        const json = JSON.parse(data);
+                        postData.should.be.eqls(json);
+
+                        res.should.have.status(200);
+                        res.body.should.have.property(
+                            "fileMessage",
+                            "File has been saved"
+                        );
+
+                        done();
+                    });
+                });
+        });
+        it("it should save json without count", done => {
+            const withoutCount = {
+                message: "Lorem ipsum ...",
+                name: "post data name"
+            };
+            chai
+                .request(app)
+                .post("/track")
+                .send(withoutCount)
+                .end((err, res) => {
+                    fs.readFile(ACTIONS_FILE, "utf8", function(err, data) {
+                        should.exist(data);
+                        const json = JSON.parse(data);
+                        withoutCount.should.be.eqls(json);
+
+                        res.should.have.status(200);
+                        res.body.should.have.property(
+                            "fileMessage",
+                            "File has been saved"
+                        );
+
+                        done();
+                    });
+                });
+        });
+        it("it should not save json with invalid count", done => {
+            const invalidPostData = {
+                count: -1,
+                message: "Lorem ipsum ...",
+                name: "negative count"
+            };
+            chai
+                .request(app)
+                .post("/track")
+                .send(invalidPostData)
+                .end((err, res) => {
+                    fs.readFile(ACTIONS_FILE, "utf8", function(err, data) {
+                        should.not.exist(data);
+
+                        res.should.have.status(400);
+                        res.body.should.have.property("errorMessage");
+
+                        done();
+                    });
+                });
+        });
     });
 });
